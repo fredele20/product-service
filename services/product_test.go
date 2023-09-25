@@ -17,6 +17,7 @@ func TestService_CreateProduct(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	dataStore := mocks.NewMockDataStore(ctrl)
+	redis := mocks.NewMockCacheRedisStore(ctrl)
 	logger := logrus.New()
 
 	timeStamp := time.Now()
@@ -45,7 +46,7 @@ func TestService_CreateProduct(t *testing.T) {
 		}
 
 		dataStore.EXPECT().CreateProduct(ctx, &payload1).Return(&payload1, nil)
-		service := NewService(dataStore, logger)
+		service := NewService(dataStore, logger, redis)
 		product, err := service.CreateProduct(ctx, &payload1)
 
 		require.NoError(t, err)
@@ -71,7 +72,7 @@ func TestService_CreateProduct(t *testing.T) {
 			UpdatedAt:   timeStamp,
 		}
 		dataStore.EXPECT().CreateProduct(ctx, &payload2).Return(&payload2, nil)
-		service := NewService(dataStore, logger)
+		service := NewService(dataStore, logger, redis)
 		product, err := service.CreateProduct(ctx, &payload2)
 
 		require.Error(t, err)

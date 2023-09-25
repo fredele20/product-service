@@ -22,7 +22,6 @@ type ListProducts struct {
 }
 
 type ListProductsParams struct {
-	Filter int `json:"filter"`
 	Limit  int `json:"limit"`
 }
 

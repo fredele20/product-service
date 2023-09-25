@@ -80,7 +80,7 @@ func (mr *MockDataStoreMockRecorder) GetProductById(ctx, id interface{}) *gomock
 }
 
 // ListProducts mocks base method.
-func (m *MockDataStore) ListProducts(ctx context.Context, payload *models.ListProductsParams) (*models.ListProducts, error) {
+func (m *MockDataStore) ListProducts(ctx context.Context, payload models.ListProductsParams) (*models.ListProducts, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProducts", ctx, payload)
 	ret0, _ := ret[0].(*models.ListProducts)

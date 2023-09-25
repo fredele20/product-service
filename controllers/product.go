@@ -7,7 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-
 func (c *Controllers) AddProduct(ctx *gin.Context) {
 	var payload models.Product
 	if err := ctx.BindJSON(&payload); err != nil {
@@ -22,6 +21,33 @@ func (c *Controllers) AddProduct(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusCreated, product)
+}
+
+func (c *Controllers) GetProductById(ctx *gin.Context) {
+	id := ctx.Param("id")
+	product, err := c.services.GetProductById(ctx, id)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, product)
+}
+
+func (c *Controllers) ListProducts(ctx *gin.Context) {
+	var filter models.ListProductsParams
+	if err := ctx.BindJSON(&filter); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	products, err := c.services.ListProducts(ctx, filter)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, products)
 }
 
 func (c *Controllers) UpdateProduct(ctx *gin.Context) {

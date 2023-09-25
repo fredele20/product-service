@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"math/rand"
+	"product-service/cache"
 	"product-service/database"
 	"strings"
 	"time"
@@ -26,11 +27,13 @@ func generateId() string {
 type Service struct {
 	db     database.DataStore
 	logger *logrus.Logger
+	redis cache.CacheRedisStore
 }
 
-func NewService(db database.DataStore, l *logrus.Logger) *Service {
+func NewService(db database.DataStore, l *logrus.Logger, redis cache.CacheRedisStore) *Service {
 	return &Service{
 		db:     db,
 		logger: l,
+		redis: redis,
 	}
 }
