@@ -15,7 +15,7 @@ func (c *Controllers) AddProduct(ctx *gin.Context) {
 		return
 	}
 
-	product, err := c.services.CreateProduct(ctx, payload)
+	product, err := c.services.CreateProduct(ctx, &payload)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -34,7 +34,7 @@ func (c *Controllers) UpdateProduct(ctx *gin.Context) {
 	id := ctx.Param("id")
 	payload.Id = id
 
-	updated, err := c.services.UpdateProduct(ctx, payload)
+	updated, err := c.services.UpdateProduct(ctx, &payload)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
