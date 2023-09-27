@@ -45,12 +45,12 @@ func (d *dbStore) ListProducts(ctx context.Context, payload models.ListProductsP
 	opts := options.Find()
 
 	if payload.Limit != 0 {
-		opts.SetLimit(int64(payload.Limit))
+		opts.SetLimit(payload.Limit)
 	}
 
 	filter := bson.M{}
 
-	var products []models.Product
+	var products []*models.Product
 
 	cursor, err := d.productCollection().Find(ctx, filter, opts)
 	if err != nil {
@@ -69,7 +69,7 @@ func (d *dbStore) ListProducts(ctx context.Context, payload models.ListProductsP
 
 	return &models.ListProducts{
 		Products: products,
-		Count: int(count),
+		Count: count,
 	}, nil
 }
 

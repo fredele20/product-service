@@ -17,12 +17,12 @@ type Product struct {
 }
 
 type ListProducts struct {
-	Products []Product `json:"products"`
-	Count    int       `json:"count"`
+	Products []*Product `json:"products"`
+	Count    int64       `json:"count"`
 }
 
 type ListProductsParams struct {
-	Limit  int `json:"limit"`
+	Limit  int64 `json:"limit"`
 }
 
 type Cart struct {
