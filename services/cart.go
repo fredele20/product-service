@@ -2,17 +2,15 @@ package services
 
 import (
 	"context"
-	"product-service/models"
 )
 
-
-func (s *Service) AddToCart(ctx context.Context, userId, productId string) (*models.Product, error) {
-	product, err := s.db.AddToCart(ctx, userId, productId)
+func (s *Service) AddToCart(ctx context.Context, userId, productId string) error {
+	err := s.db.AddToCart(ctx, userId, productId)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return product, nil
+	return nil
 }
 
 func (s *Service) RemoveFromCart(ctx context.Context, userId, productId string) error {

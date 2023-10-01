@@ -8,37 +8,41 @@ import (
 )
 
 func (controller *Controllers) AddToCart(ctx *gin.Context) {
-	productId := ctx.Query("id")
+	productId := ctx.Param("id")
 	if productId == "" {
 		log.Println("product id is empty")
 		ctx.JSON(http.StatusBadRequest, gin.H{"err": "product id is empty"})
 		return
 	}
 
-	userId := ctx.GetString("userid")
+	// NOTE: This will be used for production code.
+	// userId := ctx.GetString("userid")
+	// This is used for testing purposes
+	userId := "jfdlfs09djfasjd34fdfj3gh"
 
-	cartItem, err := controller.services.AddToCart(ctx, userId, productId)
+	err := controller.services.AddToCart(ctx, userId, productId)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "failed to add cart item"})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, cartItem)
+	ctx.JSON(http.StatusOK, "Successfully added an item to the cart")
 }
 
 func (controller *Controllers) RemoveFromCart(ctx *gin.Context) {
-	productId := ctx.Query("id")
+	productId := ctx.Param("id")
 	if productId == "" {
 		log.Println("product id is empty")
 		ctx.JSON(http.StatusBadRequest, gin.H{"err": "product id is empty"})
 		return
 	}
 
-	userId := ctx.GetString("userid")
+	// userId := ctx.GetString("userid")
+	userId := "jfdlfs09djfasjd34fdfj"
 
 	err := controller.services.RemoveFromCart(ctx, userId, productId)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "failed to add cart item"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 

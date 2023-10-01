@@ -21,4 +21,6 @@ func Routes(incomingRoutes *gin.Engine, h Route) {
 	incomingRoutes.POST("/products", h.controller.AddProduct)
 	incomingRoutes.PUT("/products/:id", h.controller.UpdateProduct)
 	incomingRoutes.DELETE("/products/:id", h.controller.DeleteProduct)
+	incomingRoutes.POST("/products/:id/cart", h.controller.AddToCart)
+	incomingRoutes.DELETE("/products/:id/cart", h.controller.RemoveFromCart)
 }

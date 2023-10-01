@@ -27,7 +27,6 @@ type ListProductsParams struct {
 }
 
 type Cart struct {
-	Id        string    `json:"id" bson:"id"`
 	UserId    string    `json:"userId" bson:"userId"`
 	CartItems []Product `json:"cartItems" bson:"cartItems,omitempty"`
 }

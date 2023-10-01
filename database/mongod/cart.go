@@ -11,12 +11,13 @@ import (
 )
 
 // AddToCart implements database.DataStore.
-func (d *dbStore) AddToCart(ctx context.Context, userId string, productId string) (*models.Product, error) {
+func (d *dbStore) AddToCart(ctx context.Context, userId string, productId string) error {
 	var cart models.Cart
 	var product models.Product
+	cart.UserId = userId
 
 	if err := d.productCollection().FindOne(ctx, bson.M{"id": productId}).Decode(&product); err != nil {
-		return nil, errors.New("Product with the given ID is not found")
+		return errors.New("Product with the given ID is not found")
 	}
 
 	if err := d.cartCollection().FindOne(ctx, bson.M{"userId": userId}).Decode(&cart); err == nil {
@@ -25,10 +26,10 @@ func (d *dbStore) AddToCart(ctx context.Context, userId string, productId string
 			bson.D{{Key: "$push", Value: bson.D{primitive.E{Key: "cartItems", Value: product}}}},
 		)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-		return &product, nil
+		return nil
 	}
 
 	cart.UserId = userId
@@ -36,17 +37,17 @@ func (d *dbStore) AddToCart(ctx context.Context, userId string, productId string
 
 	_, err := d.cartCollection().InsertOne(ctx, cart)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &product, nil
+	return nil
 }
 
 // RemoveFromCart implements database.DataStore.
 func (d *dbStore) RemoveFromCart(ctx context.Context, userId string, productId string) error {
 	var cart models.Cart
 
-	err := d.cartCollection().FindOneAndUpdate(ctx, 
+	err := d.cartCollection().FindOneAndUpdate(ctx,
 		bson.D{primitive.E{Key: "userId", Value: userId}},
 		bson.M{"$pull": bson.M{"cartItems": bson.M{"id": productId}}},
 	).Decode(&cart)
