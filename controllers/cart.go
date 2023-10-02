@@ -48,3 +48,16 @@ func (controller *Controllers) RemoveFromCart(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, "Successfully removed item from cart")
 }
+
+func (controller *Controllers) Checkout(ctx *gin.Context) {
+
+	userId := "jfdlfs09djfasjd34fdfj3gh"
+
+	checkout, err := controller.services.Checkout(ctx, userId)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, checkout)
+}

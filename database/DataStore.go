@@ -16,4 +16,6 @@ type DataStore interface {
 	RemoveFromCart(ctx context.Context, userId, productId string) error
 	ListProducts(ctx context.Context) (*models.ListProducts, error)
 	ListStoreProducts(ctx context.Context, storeId string) (*models.ListProducts, error)
+
+	CheckoutCart(ctx context.Context, userId string) (*models.CartCheckoutResponse, error)
 }

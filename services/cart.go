@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"product-service/models"
 )
 
 func (s *Service) AddToCart(ctx context.Context, userId, productId string) error {
@@ -18,4 +19,13 @@ func (s *Service) RemoveFromCart(ctx context.Context, userId, productId string) 
 		return err
 	}
 	return nil
+}
+
+func (s *Service) Checkout(ctx context.Context, userId string) (*models.CartCheckoutResponse, error) {
+	checkout, err := s.db.CheckoutCart(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	return checkout, nil
 }

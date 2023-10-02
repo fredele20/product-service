@@ -32,9 +32,18 @@ type Cart struct {
 }
 
 type Order struct {
-	Id     string `json:"id" bson:"id"`
-	CartId string `json:"cartId" bson:"cartId"`
-	Price  int    `json:"price" bson:"price"`
+	Id         string    `json:"id" bson:"id"`
+	UserId     string    `json:"userId" bson:"userId"`
+	Items      []Product `json:"items" bson:"items"`
+	CartId     string    `json:"cartId" bson:"cartId"`
+	Price      int       `json:"price" bson:"price"`
+	OrderedAt  time.Time `json:"orderedAt" bson:"orderedAt"`
+	CanceledAt time.Time `json:"canceledAt" bson:""`
+}
+
+type CartCheckoutResponse struct {
+	Cart Cart `json:"cart"`
+	TotalPrice int `json:"price" bson:"price"`
 }
 
 func (p Product) Validate() error {
