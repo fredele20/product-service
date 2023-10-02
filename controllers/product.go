@@ -35,13 +35,8 @@ func (c *Controllers) GetProductById(ctx *gin.Context) {
 }
 
 func (c *Controllers) ListProducts(ctx *gin.Context) {
-	var filter models.ListProductsParams
-	if err := ctx.BindJSON(&filter); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	products, err := c.services.ListProducts(ctx, filter)
+	
+	products, err := c.services.ListProducts(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -57,8 +52,7 @@ func (c *Controllers) UpdateProduct(ctx *gin.Context) {
 		return
 	}
 
-	id := ctx.Param("id")
-	payload.Id = id
+	payload.Id = ctx.Param("id")
 
 	updated, err := c.services.UpdateProduct(ctx, &payload)
 	if err != nil {
@@ -78,4 +72,16 @@ func (c *Controllers) DeleteProduct(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, "Successfully deleted the product")
+}
+
+func (c *Controllers) ListStoreProducts(ctx *gin.Context) {
+	storeId := ctx.GetString("storeId")
+
+	products, err := c.services.ListStoreProducts(ctx, storeId)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, products)
 }

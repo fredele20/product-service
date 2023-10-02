@@ -35,12 +35,12 @@ func (s *Service) GetProductById(ctx context.Context, id string) (*models.Produc
 	return product, nil
 }
 
-func (s *Service) ListProducts(ctx context.Context, payload models.ListProductsParams) (*models.ListProducts, error) {
+func (s *Service) ListProducts(ctx context.Context) (*models.ListProducts, error) {
 	var result models.ListProducts
 
 	cacheValue, err := s.redis.Get(ctx, "product_cache")
 	if err == redis.Nil {
-		result, err := s.db.ListProducts(ctx, payload)
+		result, err := s.db.ListProducts(ctx)
 		if err != nil {
 			s.logger.WithError(err).Error(err.Error())
 			return nil, err
@@ -84,4 +84,12 @@ func (s *Service) DeleteProduct(ctx context.Context, id string) error {
 		return err
 	}
 	return nil
+}
+
+func (s *Service) ListStoreProducts(ctx context.Context, storeId string) (*models.ListProducts, error) {
+	products, err := s.db.ListStoreProducts(ctx, storeId)
+	if err != nil {
+		return nil, err
+	}
+	return products, nil
 }

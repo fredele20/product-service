@@ -7,6 +7,7 @@ import (
 
 type Product struct {
 	Id          string    `json:"id" bson:"id"`
+	StoreId 		string    `json:"storeId" bson:"storeId"`
 	Name        string    `json:"name" bson:"name,omitempty"`
 	Description string    `json:"description" bson:"description,omitempty"`
 	Quantity    int       `json:"quantity" bson:"quantity,omitempty"`
