@@ -7,6 +7,7 @@ import (
 
 type Product struct {
 	Id          string    `json:"id" bson:"id"`
+	StoreId 		string    `json:"storeId" bson:"storeId"`
 	Name        string    `json:"name" bson:"name,omitempty"`
 	Description string    `json:"description" bson:"description,omitempty"`
 	Quantity    int       `json:"quantity" bson:"quantity,omitempty"`
@@ -17,13 +18,12 @@ type Product struct {
 }
 
 type ListProducts struct {
-	Products []Product `json:"products"`
-	Count    int       `json:"count"`
+	Products []*Product `json:"products"`
+	Count    int64       `json:"count"`
 }
 
 type ListProductsParams struct {
-	Filter int `json:"filter"`
-	Limit  int `json:"limit"`
+	Limit  int64 `json:"limit"`
 }
 
 type Cart struct {
