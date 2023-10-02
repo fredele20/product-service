@@ -2,6 +2,8 @@ package mongod
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"product-service/models"
 	"time"
 
@@ -28,12 +30,42 @@ func (d *dbStore) DeleteProduct(ctx context.Context, id string) error {
 
 // GetProductById implements database.DataStore.
 func (d *dbStore) GetProductById(ctx context.Context, id string) (*models.Product, error) {
-	panic("unimplemented")
+	var product models.Product
+	if err := d.productCollection().FindOne(ctx, bson.M{"id": id}).Decode(&product); err != nil {
+		if err.Error() == "mongo: no documents in result" {
+			return nil, errors.New("No product with the given id")
+		}
+		return nil, err
+	}
+	return &product, nil
 }
 
 // ListProducts implements database.DataStore.
-func (d *dbStore) ListProducts(ctx context.Context, payload *models.ListProductsParams) (*models.ListProducts, error) {
-	panic("unimplemented")
+func (d *dbStore) ListProducts(ctx context.Context) (*models.ListProducts, error) {
+
+	filter := bson.M{}
+
+	var products []*models.Product
+
+	cursor, err := d.productCollection().Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := cursor.All(ctx, &products); err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	count, err := d.productCollection().CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.ListProducts{
+		Products: products,
+		Count:    count,
+	}, nil
 }
 
 // UpdateProduct implements database.DataStore.
@@ -50,3 +82,29 @@ func (d *dbStore) UpdateProduct(ctx context.Context, payload *models.Product) (*
 	}
 	return &product, nil
 }
+
+// ListProductsByStore implements database.DataStore.
+func (d *dbStore) ListStoreProducts(ctx context.Context, storeId string) (*models.ListProducts, error) {
+	var products []*models.Product
+	
+	filter := bson.M{"storeId": storeId}
+	cursor, err := d.productCollection().Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := cursor.All(ctx, &products); err != nil {
+		return nil, err
+	}
+
+	count, err := d.productCollection().CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.ListProducts{
+		Products: products,
+		Count: count,
+	}, nil
+}
+
