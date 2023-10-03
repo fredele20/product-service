@@ -33,3 +33,7 @@ func MongoConnection(connectionUri, databaseName string) (database.DataStore, er
 func (d *dbStore) productCollection() *mongo.Collection {
 	return d.client.Database(d.dbName).Collection("products")
 }
+
+func (d *dbStore) cartCollection() *mongo.Collection {
+	return d.client.Database(d.dbName).Collection("carts")
+}
