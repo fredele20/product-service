@@ -2,12 +2,13 @@ package models
 
 import (
 	"time"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
 type Product struct {
 	Id          string    `json:"id" bson:"id"`
-	StoreId 		string    `json:"storeId" bson:"storeId"`
+	StoreName   string    `json:"storeName" bson:"storeName"`
 	Name        string    `json:"name" bson:"name,omitempty"`
 	Description string    `json:"description" bson:"description,omitempty"`
 	Quantity    int       `json:"quantity" bson:"quantity,omitempty"`
@@ -19,11 +20,12 @@ type Product struct {
 
 type ListProducts struct {
 	Products []*Product `json:"products"`
-	Count    int64       `json:"count"`
+	Count    int64      `json:"count"`
 }
 
 type ListProductsParams struct {
-	Limit  int64 `json:"limit"`
+	StoreName string `json:"storeName"`
+	Limit     int    `json:"limit"`
 }
 
 

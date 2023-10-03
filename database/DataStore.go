@@ -11,11 +11,5 @@ type DataStore interface {
 	GetProductById(ctx context.Context, id string) (*models.Product, error)
 	UpdateProduct(ctx context.Context, payload *models.Product) (*models.Product, error)
 	DeleteProduct(ctx context.Context, id string) error
-
-	AddToCart(ctx context.Context, payload models.AddToCartRequest) error
-	RemoveFromCart(ctx context.Context, userId, productId string) error
-	ListProducts(ctx context.Context) (*models.ListProducts, error)
-	ListStoreProducts(ctx context.Context, storeId string) (*models.ListProducts, error)
-
-	CheckoutCart(ctx context.Context, userId string) (*models.CartCheckoutResponse, error)
+	ListProducts(ctx context.Context, filter models.ListProductsParams) (*models.ListProducts, error)
 }
