@@ -3,6 +3,7 @@ package controllers
 import (
 	"net/http"
 	"product-service/models"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,6 +14,8 @@ func (c *Controllers) AddProduct(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	payload.StoreName = ctx.GetString("storeName")
 
 	product, err := c.services.CreateProduct(ctx, &payload)
 	if err != nil {
@@ -35,8 +38,12 @@ func (c *Controllers) GetProductById(ctx *gin.Context) {
 }
 
 func (c *Controllers) ListProducts(ctx *gin.Context) {
-	
-	products, err := c.services.ListProducts(ctx)
+
+	var filter models.ListProductsParams
+	filter.Limit, _ = strconv.Atoi(ctx.Query("limit"))
+	filter.StoreName = ctx.Query("storeName")
+
+	products, err := c.services.ListProducts(ctx, filter)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -72,16 +79,4 @@ func (c *Controllers) DeleteProduct(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, "Successfully deleted the product")
-}
-
-func (c *Controllers) ListStoreProducts(ctx *gin.Context) {
-	storeId := ctx.GetString("storeId")
-
-	products, err := c.services.ListStoreProducts(ctx, storeId)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	ctx.JSON(http.StatusOK, products)
 }

@@ -23,5 +23,4 @@ func Routes(incomingRoutes *gin.Engine, h Route) {
 	incomingRoutes.GET("/products/:id", h.controller.GetProductById)
 	incomingRoutes.PUT("/products/:id", h.controller.UpdateProduct)
 	incomingRoutes.DELETE("/products/:id", h.controller.DeleteProduct)
-	incomingRoutes.GET("/store/products", h.controller.ListStoreProducts)
 }

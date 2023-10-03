@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"product-service/models"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -41,13 +42,25 @@ func (d *dbStore) GetProductById(ctx context.Context, id string) (*models.Produc
 }
 
 // ListProducts implements database.DataStore.
-func (d *dbStore) ListProducts(ctx context.Context) (*models.ListProducts, error) {
+func (d *dbStore) ListProducts(ctx context.Context, filters models.ListProductsParams) (*models.ListProducts, error) {
+
+	opts := options.Find()
+
+	limit := int64(filters.Limit)
+
+	if filters.Limit != 0 {
+		opts.SetLimit(limit)
+	}
 
 	filter := bson.M{}
 
+	if filters.StoreName != "" {
+		filter["storeName"] = bson.M{"$regex": strings.TrimSpace(strings.ToLower(filters.StoreName))}
+	}
+
 	var products []*models.Product
 
-	cursor, err := d.productCollection().Find(ctx, filter)
+	cursor, err := d.productCollection().Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +70,11 @@ func (d *dbStore) ListProducts(ctx context.Context) (*models.ListProducts, error
 		return nil, err
 	}
 
-	count, err := d.productCollection().CountDocuments(ctx, filter)
+	countOpts := options.Count()
+	if filters.Limit != 0 {
+		countOpts.SetLimit(limit)
+	}
+	count, err := d.productCollection().CountDocuments(ctx, filter, countOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -82,29 +99,3 @@ func (d *dbStore) UpdateProduct(ctx context.Context, payload *models.Product) (*
 	}
 	return &product, nil
 }
-
-// ListProductsByStore implements database.DataStore.
-func (d *dbStore) ListStoreProducts(ctx context.Context, storeId string) (*models.ListProducts, error) {
-	var products []*models.Product
-	
-	filter := bson.M{"storeId": storeId}
-	cursor, err := d.productCollection().Find(ctx, filter)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := cursor.All(ctx, &products); err != nil {
-		return nil, err
-	}
-
-	count, err := d.productCollection().CountDocuments(ctx, filter)
-	if err != nil {
-		return nil, err
-	}
-
-	return &models.ListProducts{
-		Products: products,
-		Count: count,
-	}, nil
-}
-
