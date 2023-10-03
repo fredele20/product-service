@@ -12,18 +12,26 @@ import (
 )
 
 // AddToCart implements database.DataStore.
-func (d *dbStore) AddToCart(ctx context.Context, userId string, productId string) error {
+func (d *dbStore) AddToCart(ctx context.Context, payload models.AddToCartRequest) error {
 	var cart models.Cart
 	var product models.Product
-	cart.UserId = userId
+	cart.UserId = payload.UserId
 
-	if err := d.productCollection().FindOne(ctx, bson.M{"id": productId}).Decode(&product); err != nil {
+	if err := d.productCollection().FindOne(ctx, bson.M{"id": payload.ProductId}).Decode(&product); err != nil {
 		return errors.New("Product with the given ID is not found")
 	}
 
-	if err := d.cartCollection().FindOne(ctx, bson.M{"userId": userId}).Decode(&cart); err == nil {
+	if payload.Quantity > product.Quantity {
+		err := errors.New("Not enough quantity in stock, go for a lesser one")
+		return err
+	}
+
+	product.Price = product.Price * uint(payload.Quantity)
+	product.Quantity = payload.Quantity
+
+	if err := d.cartCollection().FindOne(ctx, bson.M{"userId": payload.UserId}).Decode(&cart); err == nil {
 		_, err := d.cartCollection().UpdateOne(ctx,
-			bson.D{primitive.E{Key: "userId", Value: userId}},
+			bson.D{primitive.E{Key: "userId", Value: payload.UserId}},
 			bson.D{{Key: "$push", Value: bson.D{primitive.E{Key: "cartItems", Value: product}}}},
 		)
 		if err != nil {
@@ -33,7 +41,6 @@ func (d *dbStore) AddToCart(ctx context.Context, userId string, productId string
 		return nil
 	}
 
-	cart.UserId = userId
 	cart.CartItems = append(cart.CartItems, product)
 
 	_, err := d.cartCollection().InsertOne(ctx, cart)

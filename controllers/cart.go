@@ -3,11 +3,13 @@ package controllers
 import (
 	"log"
 	"net/http"
+	"product-service/models"
 
 	"github.com/gin-gonic/gin"
 )
 
 func (controller *Controllers) AddToCart(ctx *gin.Context) {
+	var payload models.AddToCartRequest
 	productId := ctx.Param("id")
 	if productId == "" {
 		log.Println("product id is empty")
@@ -15,14 +17,20 @@ func (controller *Controllers) AddToCart(ctx *gin.Context) {
 		return
 	}
 
+	if err := ctx.BindJSON(&payload); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
 	// NOTE: This will be used for production code.
 	// userId := ctx.GetString("userid")
 	// This is used for testing purposes
-	userId := "jfdlfs09djfasjd34fdfj3gh"
+	payload.UserId = "jfdlfs09djfasjd34fdfj3gh"
+	payload.ProductId = productId
 
-	err := controller.services.AddToCart(ctx, userId, productId)
+	err := controller.services.AddToCart(ctx, payload)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "failed to add cart item"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 

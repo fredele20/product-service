@@ -26,15 +26,6 @@ type ListProductsParams struct {
 	Limit  int64 `json:"limit"`
 }
 
-type Cart struct {
-	UserId    string    `json:"userId" bson:"userId"`
-	CartItems []Product `json:"cartItems" bson:"cartItems,omitempty"`
-}
-
-type CartCheckoutResponse struct {
-	Cart Cart `json:"cart"`
-	TotalPrice int `json:"price" bson:"price"`
-}
 
 func (p Product) Validate() error {
 	if err := validation.ValidateStruct(&p,
