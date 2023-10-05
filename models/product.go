@@ -9,8 +9,8 @@ import (
 type Product struct {
 	Id          string    `json:"id" bson:"id"`
 	StoreName   string    `json:"storeName" bson:"storeName"`
-	Name        string    `json:"name" bson:"name,omitempty"`
-	Description string    `json:"description" bson:"description,omitempty"`
+	Name        string    `json:"name,omitempty" bson:"name,omitempty"`
+	Description string    `json:"description,omitempty" bson:"description,omitempty"`
 	Quantity    int       `json:"quantity" bson:"quantity,omitempty"`
 	Price       uint      `json:"price" bson:"price,omitempty"`
 	ImageUri    []string  `json:"imageUri" bson:"imageUri"`
