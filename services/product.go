@@ -16,7 +16,7 @@ func (s *Service) CreateProduct(ctx context.Context, payload *models.Product) (*
 		return nil, err
 	}
 
-	payload.Id = generateId()
+	payload.Id = GenerateId()
 	payload.TimeCreated = time.Now()
 	product, err := s.db.CreateProduct(ctx, payload)
 	if err != nil {

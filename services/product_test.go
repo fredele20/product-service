@@ -1,42 +1,48 @@
-package services
+package services_test
 
 import (
 	"context"
 	"product-service/mocks"
 	"product-service/models"
+	"product-service/services"
 	"testing"
 	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 )
 
-func TestService_CreateProduct(t *testing.T) {
+type ProductServiceSuite struct {
+	suite.Suite
+}
 
-	ctrl := gomock.NewController(t)
+var ctrl *gomock.Controller
+var dataStore *mocks.MockDataStore
+var redisStore *mocks.MockCacheRedisStore
+var logger *logrus.Logger
+var service *services.Service
+var timeStamp = time.Now()
+var ctx context.Context
 
-	dataStore := mocks.NewMockDataStore(ctrl)
-	redis := mocks.NewMockCacheRedisStore(ctrl)
-	logger := logrus.New()
+func (s *ProductServiceSuite) SetupTest() {
+	ctrl = gomock.NewController(s.T())
 
-	timeStamp := time.Now()
+	logger = logrus.New()
+	dataStore = mocks.NewMockDataStore(ctrl)
+	redisStore = mocks.NewMockCacheRedisStore(ctrl)
+	service = services.NewService(dataStore, logger, redisStore)
+}
 
-	// payload := models.Product{
-	// 	Id:          generateId(),
-	// 	Name:        "New Product",
-	// 	Description: "New Description",
-	// 	Quantity:    3,
-	// 	Price:       20,
-	// 	TimeCreated: timeStamp,
-	// 	UpdatedAt:   timeStamp,
-	// }
-	var ctx context.Context
+func TestProductServiceSuite(t *testing.T) {
+	suite.Run(t, new(ProductServiceSuite))
+}
 
-	t.Run("Create Product Success", func(t *testing.T) {
+func (s *ProductServiceSuite) TestService_CreateProduct() {
 
+	s.Run("Create Product Success", func() {
 		payload1 := models.Product{
-			Id:          generateId(),
+			Id:          services.GenerateId(),
 			Name:        "New Product",
 			Description: "New Description",
 			Quantity:    3,
@@ -46,73 +52,110 @@ func TestService_CreateProduct(t *testing.T) {
 		}
 
 		dataStore.EXPECT().CreateProduct(ctx, &payload1).Return(&payload1, nil)
-		service := NewService(dataStore, logger, redis)
 		product, err := service.CreateProduct(ctx, &payload1)
 
-		require.NoError(t, err)
-		require.NotEmpty(t, product)
-		require.Equal(t, payload1.Id, product.Id)
-		require.Equal(t, payload1.Name, product.Name)
-		require.Equal(t, payload1.Description, product.Description)
-		require.Equal(t, payload1.Price, product.Price)
+		s.NoError(err)
+		s.NotEmpty(product)
+		s.Equal(payload1.Id, product.Id)
+		s.Equal(payload1.Name, product.Name)
+		s.Equal(payload1.Description, product.Description)
+		s.Equal(payload1.Price, product.Price)
 
-		require.NotZero(t, product.TimeCreated)
-		require.NotZero(t, product.UpdatedAt)
+		s.NotZero(product.TimeCreated)
+		s.NotZero(product.UpdatedAt)
 	})
 
-	t.Skip()
-	t.Run("Create Product Failure", func(t *testing.T) {
-		payload2 := models.Product{
-			Id:          generateId(),
-			Name:        "",
+	s.Run("Create Product Failure - Validation error", func() {
+		payload2 := models.Product{}
+		product, err := service.CreateProduct(ctx, &payload2)
+
+		s.Error(err)
+		s.Contains(err.Error(), "cannot be blank")
+		s.Empty(product)
+	})
+
+}
+
+func (s *ProductServiceSuite) TestService_UpdateProduct() {
+
+	s.Run("Update Product Success", func() {
+		payload1 := models.Product{
+			Id:          services.GenerateId(),
+			Name:        "New Product",
 			Description: "New Description",
 			Quantity:    3,
 			Price:       20,
 			TimeCreated: timeStamp,
 			UpdatedAt:   timeStamp,
 		}
-		dataStore.EXPECT().CreateProduct(ctx, &payload2).Return(&payload2, nil)
-		service := NewService(dataStore, logger, redis)
-		product, err := service.CreateProduct(ctx, &payload2)
 
-		require.Error(t, err)
-		require.Empty(t, product)
+		dataStore.EXPECT().CreateProduct(ctx, &payload1).Return(&payload1, nil)
+		product, err := service.CreateProduct(ctx, &payload1)
+
+		s.NoError(err)
+		s.NotEmpty(product)
+		s.Equal(payload1.Id, product.Id)
+		s.Equal(payload1.Name, product.Name)
+		s.Equal(payload1.Description, product.Description)
+		s.Equal(payload1.Price, product.Price)
+
+		s.NotZero(product.TimeCreated)
+		s.NotZero(product.UpdatedAt)
+
+		payload2 := models.Product{
+			Id:        product.Id,
+			Name:      "Updated Name",
+			UpdatedAt: timeStamp,
+		}
+
+		dataStore.EXPECT().UpdateProduct(ctx, &payload2).Return(&payload2, nil)
+		updatedProduct, err := service.UpdateProduct(ctx, &payload2)
+
+		s.NoError(err)
+		s.NotEmpty(updatedProduct)
+		s.NotEqual(product.Name, updatedProduct.Name)
+		s.NotEqual(product.TimeCreated, updatedProduct.UpdatedAt)
+
+	})
+
+	s.Run("Update Product Failure", func() {
+
+		payload1 := models.Product{
+			Id:          services.GenerateId(),
+			Name:        "New Product",
+			Description: "New Description",
+			Quantity:    3,
+			Price:       20,
+			TimeCreated: timeStamp,
+			UpdatedAt:   timeStamp,
+		}
+
+		dataStore.EXPECT().CreateProduct(ctx, &payload1).Return(&payload1, nil)
+		product, err := service.CreateProduct(ctx, &payload1)
+
+		s.NoError(err)
+		s.NotEmpty(product)
+		s.Equal(payload1.Id, product.Id)
+		s.Equal(payload1.Name, product.Name)
+		s.Equal(payload1.Description, product.Description)
+		s.Equal(payload1.Price, product.Price)
+
+		s.NotZero(product.TimeCreated)
+		s.NotZero(product.UpdatedAt)
+
+
+		payload3 := models.Product{
+			Name:      "Updated Name",
+			UpdatedAt: timeStamp,
+		}
+		dataStore.EXPECT().UpdateProduct(ctx, &payload3).Return(&payload3, nil)
+		updateProductFailure, err := service.UpdateProduct(ctx, &payload3)
+
+		s.Error(err)
+		s.Empty(updateProductFailure)
 	})
 
 }
-
-// func TestService_UpdateProduct(t *testing.T) {
-
-// 	ctrl := gomock.NewController(t)
-
-// 	dataStore := mocks.NewMockDataStore(ctrl)
-// 	logger := logrus.New()
-
-// 	timeStamp := time.Now()
-
-// 	payload := models.Product{
-// 		Name:        "Updated Product",
-// 		Description: "New Description",
-// 		Quantity:    3,
-// 		Price:       20,
-// 		UpdatedAt:   timeStamp,
-// 	}
-
-// 	var ctx context.Context
-
-// 	dataStore.EXPECT().UpdateProduct(ctx, &payload).Return(&payload, nil)
-// 	service := NewService(dataStore, logger)
-// 	product, err := service.UpdateProduct(ctx, &payload)
-
-// 	require.NoError(t, err)
-// 	require.NotEmpty(t, product)
-// 	require.Equal(t, payload.Name, product.Name)
-// 	require.Equal(t, payload.Description, product.Description)
-// 	require.Equal(t, payload.Price, product.Price)
-
-// 	require.NotZero(t, product.UpdatedAt)
-
-// }
 
 // func TestService_DeleteProduct(t *testing.T) {
 
