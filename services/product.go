@@ -78,6 +78,9 @@ func (s *Service) ListProducts(ctx context.Context, filter models.ListProductsPa
 }
 
 func (s *Service) UpdateProduct(ctx context.Context, payload *models.Product) (*models.Product, error) {
+	if payload.Id == "" {
+		return nil, ErrInvalidProductId
+	}
 	updatedProduct, err := s.db.UpdateProduct(ctx, payload)
 	if err != nil {
 		s.logger.WithError(err).Error(ErrCouldNotUpdateProduct)

@@ -24,6 +24,8 @@ var logger *logrus.Logger
 var service *services.Service
 var timeStamp = time.Now()
 var ctx context.Context
+var payload models.Product
+var err error
 
 func (s *ProductServiceSuite) SetupTest() {
 	ctrl = gomock.NewController(s.T())
@@ -32,6 +34,16 @@ func (s *ProductServiceSuite) SetupTest() {
 	dataStore = mocks.NewMockDataStore(ctrl)
 	redisStore = mocks.NewMockCacheRedisStore(ctrl)
 	service = services.NewService(dataStore, logger, redisStore)
+
+	payload = models.Product{
+		Id:          services.GenerateId(),
+		Name:        "New Product",
+		Description: "New Description",
+		Quantity:    3,
+		Price:       20,
+		TimeCreated: timeStamp,
+		UpdatedAt:   timeStamp,
+	}
 }
 
 func TestProductServiceSuite(t *testing.T) {
@@ -39,168 +51,103 @@ func TestProductServiceSuite(t *testing.T) {
 }
 
 func (s *ProductServiceSuite) TestService_CreateProduct() {
+	// Success path
+	dataStore.EXPECT().CreateProduct(ctx, &payload).Return(&payload, err)
+	product, err := service.CreateProduct(ctx, &payload)
 
-	s.Run("Create Product Success", func() {
-		payload1 := models.Product{
-			Id:          services.GenerateId(),
-			Name:        "New Product",
-			Description: "New Description",
-			Quantity:    3,
-			Price:       20,
-			TimeCreated: timeStamp,
-			UpdatedAt:   timeStamp,
-		}
+	s.NoError(err)
+	s.NotEmpty(product)
+	s.Equal(payload.Id, product.Id)
+	s.Equal(payload.Name, product.Name)
+	s.Equal(payload.Description, product.Description)
+	s.Equal(payload.Price, product.Price)
 
-		dataStore.EXPECT().CreateProduct(ctx, &payload1).Return(&payload1, nil)
-		product, err := service.CreateProduct(ctx, &payload1)
+	s.NotZero(product.TimeCreated)
+	s.NotZero(product.UpdatedAt)
 
-		s.NoError(err)
-		s.NotEmpty(product)
-		s.Equal(payload1.Id, product.Id)
-		s.Equal(payload1.Name, product.Name)
-		s.Equal(payload1.Description, product.Description)
-		s.Equal(payload1.Price, product.Price)
+	// Failure path, due to input validation
+	payload = models.Product{}
+	product, err = service.CreateProduct(ctx, &payload)
 
-		s.NotZero(product.TimeCreated)
-		s.NotZero(product.UpdatedAt)
-	})
-
-	s.Run("Create Product Failure - Validation error", func() {
-		payload2 := models.Product{}
-		product, err := service.CreateProduct(ctx, &payload2)
-
-		s.Error(err)
-		s.Contains(err.Error(), "cannot be blank")
-		s.Empty(product)
-	})
+	s.Error(err)
+	s.Contains(err.Error(), "cannot be blank")
+	s.Empty(product)
 
 }
 
 func (s *ProductServiceSuite) TestService_UpdateProduct() {
+	dataStore.EXPECT().CreateProduct(ctx, &payload).Return(&payload, err)
+	product, err := service.CreateProduct(ctx, &payload)
 
-	s.Run("Update Product Success", func() {
-		payload1 := models.Product{
-			Id:          services.GenerateId(),
-			Name:        "New Product",
-			Description: "New Description",
-			Quantity:    3,
-			Price:       20,
-			TimeCreated: timeStamp,
-			UpdatedAt:   timeStamp,
-		}
+	s.NoError(err)
+	s.NotEmpty(product)
+	s.Equal(payload.Id, product.Id)
+	s.NotZero(product.TimeCreated)
+	s.NotZero(product.UpdatedAt)
 
-		dataStore.EXPECT().CreateProduct(ctx, &payload1).Return(&payload1, nil)
-		product, err := service.CreateProduct(ctx, &payload1)
+	payload2 := product
 
-		s.NoError(err)
-		s.NotEmpty(product)
-		s.Equal(payload1.Id, product.Id)
-		s.Equal(payload1.Name, product.Name)
-		s.Equal(payload1.Description, product.Description)
-		s.Equal(payload1.Price, product.Price)
+	payload2.Name = "Updated Name"
+	payload2.Description = "Updated Value"
 
-		s.NotZero(product.TimeCreated)
-		s.NotZero(product.UpdatedAt)
+	dataStore.EXPECT().UpdateProduct(ctx, payload2).Return(payload2, err)
+	updatedProduct, err := service.UpdateProduct(ctx, payload2)
 
-		payload2 := models.Product{
-			Id:        product.Id,
-			Name:      "Updated Name",
-			UpdatedAt: timeStamp,
-		}
+	s.NoError(err)
+	s.NotEmpty(updatedProduct)
+	s.Equal(product.Name, updatedProduct.Name)
+	s.Equal(product.Description, updatedProduct.Description)
+	s.Equal(product.UpdatedAt, updatedProduct.UpdatedAt)
 
-		dataStore.EXPECT().UpdateProduct(ctx, &payload2).Return(&payload2, nil)
-		updatedProduct, err := service.UpdateProduct(ctx, &payload2)
+	// Failure path - invalid id
+	payload2.Id = ""
+	updateProductFailure, err := service.UpdateProduct(ctx, payload2)
 
-		s.NoError(err)
-		s.NotEmpty(updatedProduct)
-		s.NotEqual(product.Name, updatedProduct.Name)
-		s.NotEqual(product.TimeCreated, updatedProduct.UpdatedAt)
-
-	})
-
-	s.Run("Update Product Failure", func() {
-
-		payload1 := models.Product{
-			Id:          services.GenerateId(),
-			Name:        "New Product",
-			Description: "New Description",
-			Quantity:    3,
-			Price:       20,
-			TimeCreated: timeStamp,
-			UpdatedAt:   timeStamp,
-		}
-
-		dataStore.EXPECT().CreateProduct(ctx, &payload1).Return(&payload1, nil)
-		product, err := service.CreateProduct(ctx, &payload1)
-
-		s.NoError(err)
-		s.NotEmpty(product)
-		s.Equal(payload1.Id, product.Id)
-		s.Equal(payload1.Name, product.Name)
-		s.Equal(payload1.Description, product.Description)
-		s.Equal(payload1.Price, product.Price)
-
-		s.NotZero(product.TimeCreated)
-		s.NotZero(product.UpdatedAt)
-
-
-		payload3 := models.Product{
-			Name:      "Updated Name",
-			UpdatedAt: timeStamp,
-		}
-		dataStore.EXPECT().UpdateProduct(ctx, &payload3).Return(&payload3, nil)
-		updateProductFailure, err := service.UpdateProduct(ctx, &payload3)
-
-		s.Error(err)
-		s.Empty(updateProductFailure)
-	})
+	s.Error(err)
+	s.Empty(updateProductFailure)
 
 }
 
-// func TestService_DeleteProduct(t *testing.T) {
+func (s *ProductServiceSuite) TestService_GetProductById() {
 
-// 	ctrl := gomock.NewController(t)
+	dataStore.EXPECT().CreateProduct(ctx, &payload).Return(&payload, err)
+	product, err := service.CreateProduct(ctx, &payload)
 
-// 	dataStore := mocks.NewMockDataStore(ctrl)
-// 	logger := logrus.New()
+	s.NoError(err)
+	s.NotEmpty(product)
 
-// 	var ctx context.Context
+	// Success part - valid id arguement
+	id := product.Id
 
-// 	dataStore.EXPECT().DeleteProduct(ctx, "1").Return(nil)
-// 	service := NewService(dataStore, logger)
-// 	err := service.DeleteProduct(ctx, "1")
+	dataStore.EXPECT().GetProductById(ctx, id).Times(1).Return(product, nil)
+	singleProduct, err := service.GetProductById(ctx, id)
 
-// 	require.NoError(t, err)
+	s.NoError(err)
+	s.NotEmpty(singleProduct)
+	s.Equal(product.Name, singleProduct.Name)
+	s.Equal(product.Description, singleProduct.Description)
 
-// }
+	// Failure part - Invalid id argument
+	id = ""
+	dataStore.EXPECT().GetProductById(ctx, id).Return(nil, err)
+	noProduct, err := service.GetProductById(ctx, id)
 
-// func VerifyPhoneNumber(uuid string, otpCode int) error {
-// 	var otpAccess models.OtpAccess
-// 	var user models.User
-// 	userResult := initializers.DB.Where("id=?", uuid).Find(&user)
-// 	if userResult.RowsAffected == 0 {
-// 		return services.ErrUserWithIdNotFound
-// 	}
+	s.NoError(err)
+	s.Empty(noProduct)
 
-// 	otpResult := initializers.DB.Where("otp_code=?", otpCode).Find(&otpAccess)
-// 	if otpResult.RowsAffected == 0 {
-// 		return services.ErrInvalidOTP
-// 	}
+}
 
-// 	currentTime := time.Now()
-// 	if otpAccess.OtpExpireAt.Unix() < currentTime.Unix() {
-// 		return services.ErrOTPExpired
-// 	}
+func (s *ProductServiceSuite) TestService_DeleteProduct() {
+	dataStore.EXPECT().CreateProduct(ctx, &payload).Return(&payload, nil)
+	product, err := service.CreateProduct(ctx, &payload)
 
-// 	if user.PhoneNumber != otpAccess.Receiver {
-// 		return errors.New("user phone number does not match with otp receiver")
-// 	}
+	s.NoError(err)
+	s.NotEmpty(product)
 
-// 	user.PhoneNumberVerifiedAt = time.Now()
-// 	if err := initializers.DB.Save(&user).Error; err != nil {
-// 		err = errors.New("Could not update field in user table")
-// 		return err
-// 	}
+	id := product.Id
 
-// 	return nil
-// }
+	dataStore.EXPECT().DeleteProduct(ctx, id).Return(nil)
+	err = service.DeleteProduct(ctx, id)
+
+	s.NoError(err)
+}

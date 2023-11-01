@@ -16,6 +16,7 @@ var (
 	ErrCouldNotAddProduct      = errors.New("can not perform create operation right now, try again.")
 	ErrCouldNotDeleteProduct   = errors.New("can not perform delete operation")
 	ErrCouldNotUpdateProduct   = errors.New("can not perform update operation right now, try again.")
+	ErrInvalidProductId        = errors.New("invalid product id is passed")
 	ErrProductValidationFailed = errors.New("failed to validate product before persisting")
 )
 
@@ -27,13 +28,13 @@ func GenerateId() string {
 type Service struct {
 	db     database.DataStore
 	logger *logrus.Logger
-	redis cache.CacheRedisStore
+	redis  cache.CacheRedisStore
 }
 
 func NewService(db database.DataStore, l *logrus.Logger, redis cache.CacheRedisStore) *Service {
 	return &Service{
 		db:     db,
 		logger: l,
-		redis: redis,
+		redis:  redis,
 	}
 }
