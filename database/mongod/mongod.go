@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"product-service/database"
+	"product-service/setup"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -14,6 +15,8 @@ type dbStore struct {
 	dbName string
 	client *mongo.Client
 }
+
+var Client *mongo.Client
 
 func MongoConnection(connectionUri, databaseName string) (database.DataStore, error) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 30*time.Second)
@@ -36,4 +39,12 @@ func (d *dbStore) productCollection() *mongo.Collection {
 
 func (d *dbStore) cartCollection() *mongo.Collection {
 	return d.client.Database(d.dbName).Collection("carts")
+}
+
+func (d *productRepository) productCollection() *mongo.Collection {
+	return d.client.Database(setup.Secrets.DatabaseName).Collection("products")
+}
+
+func (d *productRepository) Collection(collectionName string) *mongo.Collection {
+	return d.client.Database(setup.Secrets.DatabaseName).Collection(collectionName)
 }

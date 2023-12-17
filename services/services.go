@@ -1,10 +1,13 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"math/rand"
 	"product-service/cache"
 	"product-service/database"
+	"product-service/database/mongod"
+	"product-service/models"
 	"strings"
 	"time"
 
@@ -37,4 +40,38 @@ func NewService(db database.DataStore, l *logrus.Logger, redis cache.CacheRedisS
 		logger: l,
 		redis:  redis,
 	}
+}
+
+type prodService struct {
+	prodRepo mongod.ProductRepoInterface
+	// logger *logrus.Logger
+}
+
+func NewProductService(prodRepo mongod.ProductRepoInterface) ProductServiceInterface {
+	return &prodService{
+		prodRepo: prodRepo,
+	}
+}
+
+type ProductServiceInterface interface {
+	CreateProduct(ctx context.Context, payload *models.Product) (*models.Product, error)
+}
+
+
+// CreateProduct implements ProductServiceInterface.
+func (p *prodService) CreateProduct(ctx context.Context, payload *models.Product) (*models.Product, error) {
+	if err := payload.Validate(); err != nil {
+		// p.logger.WithError(err).Error(ErrProductValidationFailed.Error())
+		return nil, err
+	}
+
+	payload.Id = GenerateId()
+	payload.TimeCreated = time.Now()
+	product, err := p.prodRepo.CreateProduct(ctx, payload)
+	if err != nil {
+		// p.logger.WithError(err).Error(ErrCouldNotAddProduct)
+		return nil, ErrCouldNotAddProduct
+	}
+	
+	return product, nil
 }

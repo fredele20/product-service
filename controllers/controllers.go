@@ -1,13 +1,20 @@
 package controllers
 
-import "product-service/services"
+import (
+	"product-service/services"
 
+	"github.com/gin-gonic/gin"
+)
 
 type Controllers struct {
-	services *services.Service
+	services services.ProductServiceInterface
 }
 
-func NewController(s *services.Service) *Controllers {
+type ControllerInterface interface {
+	AddProduct(ctx *gin.Context)
+}
+
+func NewController(s services.ProductServiceInterface) ControllerInterface {
 	return &Controllers{
 		services: s,
 	}

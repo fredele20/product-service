@@ -9,8 +9,32 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+type ProductRepoInterface interface {
+	CreateProduct(ctx context.Context, payload *models.Product) (*models.Product, error)
+}
+
+type productRepository struct {
+	client mongo.Client
+}
+
+// CreateProduct implements ProductRepoInterface.
+func (p *productRepository) CreateProduct(ctx context.Context, payload *models.Product) (*models.Product, error) {
+	payload.ImageUri = make([]string, 0)
+	if _, err := p.Collection("products").InsertOne(ctx, payload); err != nil {
+		return nil, err
+	}
+	return payload, nil
+}
+
+func NewProductRepository(client mongo.Client) ProductRepoInterface {
+	return &productRepository{
+		client: client,
+	}
+}
 
 // CreateProduct implements database.DataStore.
 func (d *dbStore) CreateProduct(ctx context.Context, payload *models.Product) (*models.Product, error) {

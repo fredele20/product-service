@@ -9,9 +9,9 @@ import (
 
 type Secrets struct {
 	DatabaseName string `json:"DB_NAME"`
-	DatabaseURL string `json:"DB_URL"`
-	RedisUrl string `json:"REDIS_URL"`
-	Port string
+	DatabaseURL  string `json:"DB_URL"`
+	RedisUrl     string `json:"REDIS_URL"`
+	Port         string
 }
 
 var ss Secrets
